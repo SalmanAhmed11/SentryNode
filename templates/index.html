@@ -24,6 +24,9 @@
             </span>
             {% endif %}
           </div>
+      <aside class="w-64 bg-slate-950 border-r border-slate-800 p-6">
+        <div class="space-y-3">
+          <h1 class="text-2xl font-semibold tracking-tight text-white">SentryNode v1.0</h1>
           <p class="text-sm text-slate-400">Residential Security Intelligence</p>
           <div class="mt-6 rounded-lg border border-slate-800 bg-slate-900 p-4">
             <p class="text-xs uppercase tracking-wider text-slate-400">Assets in scope</p>
@@ -40,6 +43,7 @@
 
       <main class="flex-1 p-8 lg:p-10">
         <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <article class="rounded-xl border border-slate-800 bg-slate-900/90 p-6 shadow-lg">
             <p class="text-sm uppercase tracking-wider text-slate-400">System Threat Level</p>
             {% set threat_color = 'text-emerald-400' %}
@@ -99,6 +103,7 @@
           </div>
 
           <div class="overflow-auto max-h-[50vh] rounded-xl border border-slate-800 bg-slate-900/80">
+          <div class="overflow-auto max-h-[55vh] rounded-xl border border-slate-800 bg-slate-900/80">
             <table class="min-w-full text-sm">
               <thead class="sticky top-0 bg-slate-950/95 text-slate-200">
                 <tr>
