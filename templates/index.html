@@ -38,6 +38,14 @@
               {{ audit_status }}
             </p>
           </div>
+          <div class="rounded-lg border border-slate-800 bg-slate-900 p-4 space-y-3">
+            <p class="text-xs uppercase tracking-wider text-slate-400">Simulation Control Center</p>
+            <a href="/?scenario=SAFE" class="block rounded-md bg-slate-800 hover:bg-slate-700 px-3 py-2 text-sm text-slate-100">Quiet Mode</a>
+            <a href="/?scenario=PROBING" class="block rounded-md bg-slate-800 hover:bg-slate-700 px-3 py-2 text-sm text-slate-100">Recon detected</a>
+            <a href="/?scenario=ATTACK" class="block rounded-md bg-slate-800 hover:bg-slate-700 px-3 py-2 text-sm text-slate-100">Active Attack</a>
+            <a href="/?scenario=BREACH" class="block rounded-md bg-rose-900/60 hover:bg-rose-800 px-3 py-2 text-sm text-rose-100">Simulate Breach</a>
+          </div>
+
         </div>
       </aside>
 
@@ -82,10 +90,17 @@
           </article>
         </section>
 
+        {% if scenario == "SAFE" %}
+        <section class="mt-7 rounded-xl border border-emerald-700/50 bg-emerald-900/20 p-6 shadow-xl">
+          <h2 class="text-lg md:text-xl font-bold tracking-wide text-emerald-300">No immediate action required</h2>
+          <p class="mt-3 text-base md:text-lg text-emerald-100">{{ first_aid_action }}</p>
+        </section>
+        {% else %}
         <section class="mt-7 rounded-xl border border-red-700/70 bg-red-900/25 p-6 shadow-xl">
           <h2 class="text-lg md:text-xl font-bold tracking-wide text-red-300">URGENT ACTION REQUIRED</h2>
           <p class="mt-3 text-base md:text-lg text-red-100">{{ first_aid_action }}</p>
         </section>
+        {% endif %}
 
         <section class="mt-6 rounded-xl border border-slate-800 bg-slate-900/70 p-5">
           <h3 class="text-lg font-semibold text-white">NIST IR 8425 Audit Findings</h3>
@@ -99,6 +114,10 @@
         <section class="mt-8">
           <div class="flex items-center justify-between mb-4">
             <h3 class="text-xl font-semibold text-white">Live Incident Feed</h3>
+            <span class="text-xs uppercase tracking-wider text-slate-400">Scenario: {{ scenario }}</span>
+          </div>
+
+          <div class="overflow-auto max-h-[50vh] rounded-xl border border-slate-800 bg-slate-900/80">
             <span class="text-xs uppercase tracking-wider text-slate-400">Real-time synthetic events</span>
           </div>
 
