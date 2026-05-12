@@ -3,6 +3,14 @@
 from __future__ import annotations
 
 from flask import Flask, render_template, request
+"""Flask dashboard server for SentryNode.
+
+Renders a dark-mode SaaS view for synthetic residential IoT security events.
+"""
+
+from __future__ import annotations
+
+from flask import Flask, render_template
 
 from assets import get_device_profiles
 from auditor import audit_log_compliance
@@ -30,6 +38,20 @@ def _top_first_aid_action(events: list[dict[str, str]], scenario: str) -> str:
         return "No immediate action required. Continue routine monitoring."
 
     priority_rank = {"Low": 1, "Medium": 2, "High": 3, "Critical": 4}
+def _count_physical_security_risks(events: list[dict[str, str]]) -> int:
+    """Count successful smart lock exploit outcomes."""
+
+    return sum(1 for e in events if "PHYSICAL_LOCK_STATE: UNSECURED" in e.get("status", ""))
+
+
+def _top_first_aid_action(events: list[dict[str, str]]) -> str:
+    """Select the single most urgent mitigation recommendation."""
+
+    priority_rank = {"Low": 1, "Medium": 2, "High": 3, "Critical": 4}
+    if not events:
+        return "Review device logs and maintain firmware updates across all connected devices."
+
+    # Highest priority first, then prefer physical security compromise signals.
     sorted_events = sorted(
         events,
         key=lambda e: (
@@ -39,6 +61,10 @@ def _top_first_aid_action(events: list[dict[str, str]], scenario: str) -> str:
         reverse=True,
     )
     return sorted_events[0].get("mitigation_recommendation", "Review generated alerts.") if sorted_events else "No immediate action required."
+    return sorted_events[0].get(
+        "mitigation_recommendation",
+        "Review generated alert details for immediate containment steps.",
+    )
 
 
 @app.route("/")
@@ -50,6 +76,13 @@ def dashboard():
     threat_level = calculate_system_threat_level(events)
     physical_security_risks = _count_physical_security_risks(events)
     first_aid_action = _top_first_aid_action(events, scenario)
+    """Render the SentryNode dashboard with a fresh simulation window."""
+
+    events = simulate_threat_events()
+    threat_level = calculate_system_threat_level(events)
+    physical_security_risks = _count_physical_security_risks(events)
+    first_aid_action = _top_first_aid_action(events)
+
     audit_result = audit_log_compliance(events)
 
     return render_template(
