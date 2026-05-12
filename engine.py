@@ -11,6 +11,7 @@ from __future__ import annotations
 from dataclasses import dataclass, asdict
 from datetime import datetime, timezone, timedelta
 import random
+from typing import Dict, Iterable, List, Set
 from typing import Dict, Iterable, List
 
 from assets import get_device_ids
@@ -29,6 +30,26 @@ class SecurityEvent:
     mitigation_recommendation: str
 
 
+# Documented 2026 fingerprinting sequence used by Aisuru campaigns.
+# The sequence is emitted in this exact order for each device.
+AISURU_PORT_PROBE_SEQUENCE: List[int] = [
+    23,
+    22,
+    80,
+    8080,
+    443,
+    7547,
+    81,
+    5555,
+    8443,
+    8883,
+    1883,
+    49152,
+    37215,
+    52869,
+    62078,
+]
+
 # Mitigation guidance written for non-technical homeowners while preserving
 # professional security intent.
 MITIGATION_MAP: Dict[str, str] = {
@@ -40,9 +61,17 @@ MITIGATION_MAP: Dict[str, str] = {
         "Disable remote admin login, enforce unique passwords, and enable multi-factor "
         "authentication where available."
     ),
+    "aisuru_port_probe": (
+        "Restrict exposed device services, disable unused ports, and apply geo-IP or "
+        "firewall blocking for repeated scan sources."
+    ),
     "cve_2025_4008_injection": (
         "Apply firmware updates immediately, disable exposed command interfaces, and "
         "isolate the affected device on a separate IoT network."
+    ),
+    "smart_lock_unsecured": (
+        "Immediately engage a physical deadbolt or manual backup lock, then disconnect "
+        "the smart lock from remote access until credentials and firmware are remediated."
     ),
 }
 
@@ -56,6 +85,7 @@ SEVERITY_WEIGHTS: Dict[str, int] = {
 EVENT_PRIORITY: Dict[str, str] = {
     "aisuru_volumetric_spike": "High",
     "aisuru_bruteforce_attempt": "Medium",
+    "aisuru_port_probe": "Medium",
     "cve_2025_4008_injection": "Critical",
 }
 
@@ -74,6 +104,20 @@ def _random_timestamp(base_time: datetime, spread_minutes: int = 180) -> str:
     return ts.replace(tzinfo=timezone.utc).isoformat().replace("+00:00", "Z")
 
 
+def _is_smart_lock(device_id: str) -> bool:
+    """Infer whether a device is the smart lock profile."""
+
+    return device_id.startswith("LOCK-")
+
+
+def _derive_mitigation(event_type: str, device_id: str, status: str) -> str:
+    """Resolve context-aware mitigation recommendations for each event."""
+
+    if _is_smart_lock(device_id) and "PHYSICAL_LOCK_STATE: UNSECURED" in status:
+        return MITIGATION_MAP["smart_lock_unsecured"]
+    return MITIGATION_MAP[event_type]
+
+
 def _build_event(
     base_time: datetime,
     device_id: str,
@@ -89,6 +133,7 @@ def _build_event(
         event_type=event_type,
         source_ip=_random_public_ipv4(),
         status=status,
+        mitigation_recommendation=_derive_mitigation(event_type, device_id, status),
         mitigation_recommendation=MITIGATION_MAP[event_type],
     )
 
@@ -99,6 +144,7 @@ def simulate_threat_events(seed: int | None = None) -> List[Dict[str, str]]:
     Threats modeled:
     - Aisuru botnet volumetric traffic spikes
     - Aisuru botnet brute-force authentication attempts
+    - Aisuru botnet port-probe fingerprint sequence (15 ports per device)
     - CVE-2025-4008-style command injection attempts
     """
 
@@ -114,6 +160,17 @@ def simulate_threat_events(seed: int | None = None) -> List[Dict[str, str]]:
     injection_count = random.randint(4, 14)
 
     events: List[SecurityEvent] = []
+
+    for device_id in device_ids:
+        for port in AISURU_PORT_PROBE_SEQUENCE:
+            events.append(
+                _build_event(
+                    now,
+                    device_id=device_id,
+                    event_type="aisuru_port_probe",
+                    status=f"probe_detected port={port}",
+                )
+            )
 
     for _ in range(volumetric_count):
         events.append(
@@ -136,6 +193,19 @@ def simulate_threat_events(seed: int | None = None) -> List[Dict[str, str]]:
         )
 
     for _ in range(injection_count):
+        device_id = random.choice(device_ids)
+        base_status = random.choice(["blocked", "quarantined", "command_rejected", "success"])
+        if base_status == "success" and _is_smart_lock(device_id):
+            status = "success | PHYSICAL_LOCK_STATE: UNSECURED"
+        else:
+            status = base_status
+
+        events.append(
+            _build_event(
+                now,
+                device_id=device_id,
+                event_type="cve_2025_4008_injection",
+                status=status,
         events.append(
             _build_event(
                 now,
@@ -155,15 +225,32 @@ def calculate_system_threat_level(events: Iterable[Dict[str, str]]) -> str:
     Scoring model:
     - Weighted sum by event priority for severity.
     - Frequency escalation bonus for sustained event volume.
+    - Persistence bonus: critical override when one device is targeted by
+      multiple distinct attack families in the same batch.
     """
 
     weighted_score = 0
     event_count = 0
+    attack_families_by_device: Dict[str, Set[str]] = {}
 
     for event in events:
         event_count += 1
         priority = event.get("priority", "Low")
         weighted_score += SEVERITY_WEIGHTS.get(priority, 1)
+
+        device_id = event.get("device_id", "")
+        event_type = event.get("event_type", "")
+        if event_type.startswith("aisuru_"):
+            family = "aisuru"
+        elif event_type.startswith("cve_"):
+            family = "cve"
+        else:
+            family = event_type
+
+        attack_families_by_device.setdefault(device_id, set()).add(family)
+
+    if any(len(families) >= 2 for families in attack_families_by_device.values()):
+        return "Critical"
 
     # Frequency multiplier to represent concentrated attack windows.
     if event_count >= 60:
