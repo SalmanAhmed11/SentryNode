@@ -1,3 +1,4 @@
+"""Flask dashboard server for SentryNode."""
 """Flask dashboard server for SentryNode.
 
 Renders a dark-mode SaaS view for synthetic residential IoT security events.
@@ -8,6 +9,7 @@ from __future__ import annotations
 from flask import Flask, render_template
 
 from assets import get_device_profiles
+from auditor import audit_log_compliance
 from engine import calculate_system_threat_level, simulate_threat_events
 
 app = Flask(__name__)
@@ -50,6 +52,8 @@ def dashboard():
     physical_security_risks = _count_physical_security_risks(events)
     first_aid_action = _top_first_aid_action(events)
 
+    audit_result = audit_log_compliance(events)
+
     return render_template(
         "index.html",
         events=events,
@@ -58,6 +62,9 @@ def dashboard():
         total_alerts=len(events),
         first_aid_action=first_aid_action,
         device_profiles=get_device_profiles(),
+        compliance_score=audit_result["score"],
+        audit_status=audit_result["audit_status"],
+        audit_findings=audit_result["findings"],
     )
 
 
