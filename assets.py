@@ -13,6 +13,7 @@ from typing import Dict, List
 
 @dataclass(frozen=True)
 class DeviceProfile:
+    """Immutable profile for a single simulated IoT device."""
     """ Immutable profile for a single simulated IoT device."""
 
     device_id: str
@@ -43,6 +44,7 @@ DEVICE_PROFILES: List[DeviceProfile] = [
 
 
 def get_device_profiles() -> List[Dict[str, str]]:
+    """Return all device profiles in dictionary form for serialization workflows."""
     """Return all device profiles in dictionary form for serialisation workflows."""
 
     return [asdict(profile) for profile in DEVICE_PROFILES]
