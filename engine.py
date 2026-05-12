@@ -30,6 +30,8 @@ class SecurityEvent:
     mitigation_recommendation: str
 
 
+AISURU_PORT_PROBE_SEQUENCE: List[int] = [23, 22, 80, 8080, 443, 7547, 81, 5555, 8443, 8883, 1883, 49152, 37215, 52869, 62078]
+
 # Documented 2026 fingerprinting sequence used by Aisuru campaigns.
 # The sequence is emitted in this exact order for each device.
 AISURU_PORT_PROBE_SEQUENCE: List[int] = [
@@ -75,6 +77,7 @@ MITIGATION_MAP: Dict[str, str] = {
     ),
 }
 
+SEVERITY_WEIGHTS: Dict[str, int] = {"Low": 1, "Medium": 3, "High": 6, "Critical": 10}
 SEVERITY_WEIGHTS: Dict[str, int] = {
     "Low": 1,
     "Medium": 3,
@@ -91,6 +94,33 @@ EVENT_PRIORITY: Dict[str, str] = {
 
 
 def _random_public_ipv4() -> str:
+    return ".".join(str(random.randint(1, 254)) for _ in range(4))
+
+
+def _to_iso8601_utc(ts: datetime) -> str:
+    return ts.replace(tzinfo=timezone.utc).isoformat().replace("+00:00", "Z")
+
+
+def _clustered_timestamp(base_time: datetime) -> str:
+    """Return a timestamp in a high-density burst (seconds apart)."""
+    cluster_anchor = base_time - timedelta(minutes=random.randint(1, 20))
+    offset_seconds = random.randint(0, 90)
+    return _to_iso8601_utc(cluster_anchor + timedelta(seconds=offset_seconds))
+
+
+def _isolated_probe_timestamp(base_time: datetime) -> str:
+    """Return a timestamp spaced farther apart for reconnaissance probes."""
+    isolated_anchor = base_time - timedelta(minutes=random.randint(20, 360))
+    offset_seconds = random.randint(0, 30)
+    return _to_iso8601_utc(isolated_anchor + timedelta(seconds=offset_seconds))
+
+
+def _general_timestamp(base_time: datetime) -> str:
+    offset = random.randint(0, 180 * 60)
+    return _to_iso8601_utc(base_time - timedelta(seconds=offset))
+
+
+def _is_smart_lock(device_id: str) -> bool:
     """Generate a synthetic public source IP for event realism."""
 
     return ".".join(str(random.randint(1, 254)) for _ in range(4))
@@ -118,6 +148,18 @@ def _derive_mitigation(event_type: str, device_id: str, status: str) -> str:
     return MITIGATION_MAP[event_type]
 
 
+def _event_timestamp(base_time: datetime, event_type: str) -> str:
+    """Apply timeline semantics per attack category for forensic realism."""
+    if event_type == "aisuru_port_probe":
+        return _isolated_probe_timestamp(base_time)
+    if event_type.startswith("aisuru_"):
+        return _clustered_timestamp(base_time)
+    return _general_timestamp(base_time)
+
+
+def _build_event(base_time: datetime, device_id: str, event_type: str, status: str) -> SecurityEvent:
+    return SecurityEvent(
+        timestamp=_event_timestamp(base_time, event_type),
 def _build_event(
     base_time: datetime,
     device_id: str,
@@ -163,6 +205,13 @@ def simulate_threat_events(seed: int | None = None) -> List[Dict[str, str]]:
 
     for device_id in device_ids:
         for port in AISURU_PORT_PROBE_SEQUENCE:
+            events.append(_build_event(now, device_id, "aisuru_port_probe", f"probe_detected port={port}"))
+
+    for _ in range(volumetric_count):
+        events.append(_build_event(now, random.choice(device_ids), "aisuru_volumetric_spike", random.choice(["blocked", "degraded_service"])))
+
+    for _ in range(bruteforce_count):
+        events.append(_build_event(now, random.choice(device_ids), "aisuru_bruteforce_attempt", random.choice(["blocked", "credential_failure", "rate_limited"])))
             events.append(
                 _build_event(
                     now,
@@ -195,6 +244,8 @@ def simulate_threat_events(seed: int | None = None) -> List[Dict[str, str]]:
     for _ in range(injection_count):
         device_id = random.choice(device_ids)
         base_status = random.choice(["blocked", "quarantined", "command_rejected", "success"])
+        status = "success | PHYSICAL_LOCK_STATE: UNSECURED" if base_status == "success" and _is_smart_lock(device_id) else base_status
+        events.append(_build_event(now, device_id, "cve_2025_4008_injection", status))
         if base_status == "success" and _is_smart_lock(device_id):
             status = "success | PHYSICAL_LOCK_STATE: UNSECURED"
         else:
@@ -235,6 +286,11 @@ def calculate_system_threat_level(events: Iterable[Dict[str, str]]) -> str:
 
     for event in events:
         event_count += 1
+        weighted_score += SEVERITY_WEIGHTS.get(event.get("priority", "Low"), 1)
+
+        device_id = event.get("device_id", "")
+        event_type = event.get("event_type", "")
+        family = "aisuru" if event_type.startswith("aisuru_") else "cve" if event_type.startswith("cve_") else event_type
         priority = event.get("priority", "Low")
         weighted_score += SEVERITY_WEIGHTS.get(priority, 1)
 
