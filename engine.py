@@ -12,6 +12,7 @@ from dataclasses import dataclass, asdict
 from datetime import datetime, timezone, timedelta
 import random
 from typing import Dict, Iterable, List, Set
+from typing import Dict, Iterable, List
 
 from assets import get_device_ids
 
@@ -133,6 +134,7 @@ def _build_event(
         source_ip=_random_public_ipv4(),
         status=status,
         mitigation_recommendation=_derive_mitigation(event_type, device_id, status),
+        mitigation_recommendation=MITIGATION_MAP[event_type],
     )
 
 
@@ -152,6 +154,7 @@ def simulate_threat_events(seed: int | None = None) -> List[Dict[str, str]]:
     now = datetime.utcnow()
     device_ids = get_device_ids()
 
+    # Randomized ranges tuned for realistic household burst behavior in 2026.
     volumetric_count = random.randint(8, 25)
     bruteforce_count = random.randint(12, 40)
     injection_count = random.randint(4, 14)
@@ -203,6 +206,12 @@ def simulate_threat_events(seed: int | None = None) -> List[Dict[str, str]]:
                 device_id=device_id,
                 event_type="cve_2025_4008_injection",
                 status=status,
+        events.append(
+            _build_event(
+                now,
+                device_id=random.choice(device_ids),
+                event_type="cve_2025_4008_injection",
+                status=random.choice(["blocked", "quarantined", "command_rejected"]),
             )
         )
 
@@ -243,6 +252,7 @@ def calculate_system_threat_level(events: Iterable[Dict[str, str]]) -> str:
     if any(len(families) >= 2 for families in attack_families_by_device.values()):
         return "Critical"
 
+    # Frequency multiplier to represent concentrated attack windows.
     if event_count >= 60:
         weighted_score += 30
     elif event_count >= 40:
