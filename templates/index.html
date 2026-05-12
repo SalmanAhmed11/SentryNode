@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SentryNode v1.0 | Security Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
+          Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      }
+    </style>
+  </head>
+  <body class="bg-[#121212] text-slate-100 min-h-screen">
+    <div class="flex min-h-screen">
+      <aside class="w-64 bg-slate-950 border-r border-slate-800 p-6">
+        <div class="space-y-3">
+          <h1 class="text-2xl font-semibold tracking-tight text-white">SentryNode v1.0</h1>
+          <p class="text-sm text-slate-400">Residential Security Intelligence</p>
+          <div class="mt-6 rounded-lg border border-slate-800 bg-slate-900 p-4">
+            <p class="text-xs uppercase tracking-wider text-slate-400">Assets in scope</p>
+            <p class="mt-2 text-lg font-semibold text-slate-100">{{ device_profiles|length }} Devices</p>
+          </div>
+        </div>
+      </aside>
+
+      <main class="flex-1 p-8 lg:p-10">
+        <section class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <article class="rounded-xl border border-slate-800 bg-slate-900/90 p-6 shadow-lg">
+            <p class="text-sm uppercase tracking-wider text-slate-400">System Threat Level</p>
+            {% set threat_color = 'text-emerald-400' %}
+            {% if threat_level == 'Critical' %}
+              {% set threat_color = 'text-red-400' %}
+            {% elif threat_level == 'High' %}
+              {% set threat_color = 'text-orange-400' %}
+            {% elif threat_level == 'Medium' %}
+              {% set threat_color = 'text-yellow-300' %}
+            {% endif %}
+            <p class="mt-3 text-4xl font-bold {{ threat_color }}">{{ threat_level }}</p>
+          </article>
+
+          <article class="rounded-xl border border-slate-800 bg-slate-900/90 p-6 shadow-lg">
+            <p class="text-sm uppercase tracking-wider text-slate-400">Physical Security</p>
+            <p class="mt-3 text-4xl font-bold text-rose-300">{{ physical_security_risks }}</p>
+            <p class="mt-2 text-sm text-slate-400">Successful smart lock exploits</p>
+          </article>
+
+          <article class="rounded-xl border border-slate-800 bg-slate-900/90 p-6 shadow-lg">
+            <p class="text-sm uppercase tracking-wider text-slate-400">Total Alerts</p>
+            <p class="mt-3 text-4xl font-bold text-cyan-300">{{ total_alerts }}</p>
+            <p class="mt-2 text-sm text-slate-400">Current simulation window</p>
+          </article>
+        </section>
+
+        <section class="mt-7 rounded-xl border border-red-700/70 bg-red-900/25 p-6 shadow-xl">
+          <h2 class="text-lg md:text-xl font-bold tracking-wide text-red-300">URGENT ACTION REQUIRED</h2>
+          <p class="mt-3 text-base md:text-lg text-red-100">{{ first_aid_action }}</p>
+        </section>
+
+        <section class="mt-8">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-semibold text-white">Live Incident Feed</h3>
+            <span class="text-xs uppercase tracking-wider text-slate-400">Real-time synthetic events</span>
+          </div>
+
+          <div class="overflow-auto max-h-[55vh] rounded-xl border border-slate-800 bg-slate-900/80">
+            <table class="min-w-full text-sm">
+              <thead class="sticky top-0 bg-slate-950/95 text-slate-200">
+                <tr>
+                  <th class="px-4 py-3 text-left font-semibold">Timestamp</th>
+                  <th class="px-4 py-3 text-left font-semibold">Device ID</th>
+                  <th class="px-4 py-3 text-left font-semibold">Event Type</th>
+                  <th class="px-4 py-3 text-left font-semibold">First Aid Instruction</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-800 text-slate-100">
+                {% for event in events %}
+                <tr class="hover:bg-slate-800/60 transition-colors">
+                  <td class="px-4 py-3 whitespace-nowrap">{{ event.timestamp }}</td>
+                  <td class="px-4 py-3 whitespace-nowrap">{{ event.device_id }}</td>
+                  <td class="px-4 py-3 whitespace-nowrap">{{ event.event_type }}</td>
+                  <td class="px-4 py-3">{{ event.mitigation_recommendation }}</td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
