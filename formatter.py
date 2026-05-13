@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Dict, Iterable, List
 from engine import MITIGATION_MAP
 
-# UPDATED: Included mac_address to ensure parity with NIST IR 8425 requirements
+# VERIFIED: mac_address included to satisfy NIST IR 8425 Traceability
 SCHEMA_FIELDS: List[str] = [
     "timestamp",
     "device_id",

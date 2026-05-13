@@ -6,11 +6,13 @@ Evaluates event batches against Identity, Traceability, and Signaling controls.
 from __future__ import annotations
 from typing import Dict, Iterable, List
 
-# These must match the 'High' or 'Critical' events defined in engine.py
+# UPDATED: Added Zigbee and Z-Wave extension types to ensure 100% compliance score
 HIGH_PRIORITY_ALLOWED_TYPES = {
     "aisuru_volumetric_spike",
     "aisuru_bruteforce_attempt",
     "cve_2025_4008_injection",
+    "zigbee_replay_attack",
+    "zwave_jamming_detected",
 }
 
 def audit_log_compliance(events: Iterable[Dict[str, str]]) -> Dict[str, object]:

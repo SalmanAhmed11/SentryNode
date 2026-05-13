@@ -8,7 +8,10 @@ from __future__ import annotations  # MUST BE AT THE TOP
 from flask import Flask, render_template, request
 from assets import get_device_profiles
 from auditor import audit_log_compliance
-from engine import calculate_system_threat_level, simulate_threat_events
+
+# MODIFIED: Pulling simulation from the Protocol Extension sidecar instead of core engine
+from engine import calculate_system_threat_level
+from protocol_extension import simulate_with_extensions as simulate_threat_events
 
 app = Flask(__name__)
 
@@ -52,7 +55,7 @@ def dashboard():
     requested = (request.args.get("scenario", "BREACH") or "BREACH").upper()
     scenario = SCENARIO_ALIASES.get(requested, "BREACH")
 
-    # Execute simulation and assessment
+    # Execute simulation and assessment (Now uses the Protocol Extension)
     events = simulate_threat_events(scenario=scenario)
     threat_level = calculate_system_threat_level(events)
     physical_security_risks = _count_physical_security_risks(events)
