@@ -1,6 +1,6 @@
 """
 NIST IR 8425 Compliance Auditor - SentryNode v1.0
-Evaluates event batches against Identity, Traceability, and Signaling controls.
+Evaluates event batches against Identity, Traceability, and Signalling controls.
 """
 
 from __future__ import annotations
@@ -18,7 +18,7 @@ def audit_log_compliance(events: Iterable[Dict[str, str]]) -> Dict[str, object]:
     Assesses log quality based on NIST IR 8425 Core Baseline.
     - Identity: Existence of device_id.
     - Traceability: Existence of mac_address.
-    - Signaling: Alignment of priority levels with event categories.
+    - Signalling: Alignment of priority levels with event categories.
     """
     findings: List[str] = []
     total_checks = 0
@@ -41,7 +41,7 @@ def audit_log_compliance(events: Iterable[Dict[str, str]]) -> Dict[str, object]:
         else:
             findings.append(f"Traceability failure: {event_label} missing mac_address.")
 
-        # 3. Signaling Check (Severity Alignment)
+        # 3. Signalling Check (Severity Alignment)
         priority = event.get("priority", "")
         if priority in {"High", "Critical"}:
             total_checks += 1
