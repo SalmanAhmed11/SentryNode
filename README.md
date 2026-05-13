@@ -13,14 +13,14 @@
 ---
 
 ## 🚀 Project Overview
-SentryNode is a high-fidelity security simulation environment designed to bridge the gap between technical network telemetry and physical home safety. Developed as a response to the evolving 2026 IoT threat landscape, the platform models sophisticated attack vectors—specifically the **Aisuru Botnet** and **CVE-2025-4008** exploits—and translates them into actionable "First Aid" intelligence for homeowners.
+SentryNode is a high-fidelity security simulation environment designed to bridge the gap between technical network telemetry and physical home safety. Developed as a response to the evolving 2026 IoT threat landscape, the platform models sophisticated attack vectors, specifically the **Aisuru Botnet** and **CVE-2025-4008** exploits, and translates them into actionable "First Aid" intelligence for homeowners.
 
 ## 🛠️ Key Architectural Features
 * **Dynamic Scenario Engine:** Supports four distinct operational states (Safe, Probing, Attack, Breach) to demonstrate the full incident response lifecycle.
-* **NIST IR 8425 Compliance Auditor:** A built-in automated auditor that evaluates generated telemetry against international standards for Identity, Traceability (MAC-level), and Signaling.
-* **Forensic Realism:** Implements "Clustered Timing" for volumetric attacks and "Spaced Reconnaissance" for port-probing sequences, mimicking actual adversary behavior.
+* **NIST IR 8425 Compliance Auditor:** A built-in automated auditor that evaluates generated telemetry against international standards for Identity, Traceability (MAC-level), and Signalling.
+* **Forensic Realism:** Implements "Clustered Timing" for volumetric attacks and "Spaced Reconnaissance" for port-probing sequences, mimicking actual adversary behaviour.
 * **Risk Persistence Logic:** Automatically escalates threat levels based on multi-vector targeting on single assets.
-* **Modern SaaS Dashboard:** A professional dark-mode UI built with Flask and Tailwind CSS, prioritizing user experience (UX) and clarity of risk.
+* **Modern SaaS Dashboard:** A professional dark-mode UI built with Flask and Tailwind CSS, prioritising user experience (UX) and clarity of risk.
 
 ---
 
@@ -69,4 +69,4 @@ Asset Identification: Unique device_id per event.
 
 Hardware Traceability: Locally administered mac_address logging.
 
-Severity Signaling: Precise mapping of event types to priority levels.
+Severity Signalling: Precise mapping of event types to priority levels.
