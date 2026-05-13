@@ -8,7 +8,7 @@ from typing import Dict, List
 
 @dataclass(frozen=True)
 class DeviceProfile:
-    """Immutable profile for a single simulated IoT device."""
+    """ Immutable profile for a single simulated IoT device."""
     device_id: str
     mac_address: str
     device_type: str
