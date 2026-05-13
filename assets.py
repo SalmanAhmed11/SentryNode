@@ -6,6 +6,9 @@ Each profile includes:
 - locally administered unicast MAC address
 - device type classification
 """
+Asset Library - SentryNode v1.0
+Defines immutable device profiles for residential IoT environments.
+"""
 
 from dataclasses import dataclass, asdict
 from typing import Dict, List
@@ -15,6 +18,9 @@ from typing import Dict, List
 class DeviceProfile:
     """Immutable profile for a single simulated IoT device."""
 
+@dataclass(frozen=True)
+class DeviceProfile:
+    """ Immutable profile for a single simulated IoT device."""
     device_id: str
     mac_address: str
     device_type: str
@@ -23,6 +29,7 @@ class DeviceProfile:
 # Locally administered unicast MAC addresses:
 # - least significant bit of first octet = 0 (unicast)
 # - second least significant bit of first octet = 1 (locally administered)
+# Locally administered unicast MAC addresses for 2026 residential hardware
 DEVICE_PROFILES: List[DeviceProfile] = [
     DeviceProfile(
         device_id="RTR-RES-2026-001",
@@ -57,4 +64,14 @@ def get_device_ids() -> List[str]:
 def get_profile_map() -> Dict[str, Dict[str, str]]:
     """Return a lookup map keyed by device_id for fast enrichment."""
 
+def get_device_profiles() -> List[Dict[str, str]]:
+    """Return all device profiles as a list of dictionaries."""
+    return [asdict(profile) for profile in DEVICE_PROFILES]
+
+def get_device_ids() -> List[str]:
+    """Return the list of active device IDs."""
+    return [profile.device_id for profile in DEVICE_PROFILES]
+
+def get_profile_map() -> Dict[str, Dict[str, str]]:
+    """Return a lookup map keyed by device_id for rapid forensic enrichment."""
     return {profile.device_id: asdict(profile) for profile in DEVICE_PROFILES}
