@@ -36,7 +36,6 @@ MITIGATION_MAP: Dict[str, str] = {
     "smart_lock_unsecured": "IMMEDIATE: Engage physical deadbolt and disconnect lock from remote access."
 }
 
-# FIXED: Added bruteforce_attempt to ensure correct threat scoring
 EVENT_PRIORITY: Dict[str, str] = {
     "system_ping": "Low",
     "aisuru_port_probe": "Medium",
@@ -99,7 +98,7 @@ def simulate_threat_events(scenario: str = "BREACH", seed: int | None = None) ->
     events: List[SecurityEvent] = []
 
     if scenario == "SAFE":
-        for _ in range(random.randint(3, 6)):
+        for _ in range(random.randint(3, 8)): # Added more variety
             events.append(_build_event(now, random.choice(device_ids), "system_ping", "success"))
 
     elif scenario == "PROBING":
@@ -108,18 +107,24 @@ def simulate_threat_events(scenario: str = "BREACH", seed: int | None = None) ->
             events.append(_build_event(now, target, "aisuru_port_probe", f"probe port={port}"))
 
     elif scenario == "ATTACK":
-        for _ in range(random.randint(15, 30)):
+        for _ in range(random.randint(20, 45)): # Higher variety
             etype = random.choice(["aisuru_volumetric_spike", "aisuru_bruteforce_attempt"])
             events.append(_build_event(now, random.choice(device_ids), etype, "blocked"))
 
     else:  # BREACH
+        # Recon phase
         for d_id in device_ids:
             events.append(_build_event(now, d_id, "aisuru_port_probe", "recon_detected"))
-        for _ in range(20):
+        
+        # Volumetric phase (FIXED: Now dynamic)
+        for _ in range(random.randint(25, 50)): 
             events.append(_build_event(now, random.choice(device_ids), "aisuru_volumetric_spike", "blocked"))
         
+        # Injection phase (FIXED: Smart locks might have multiple exploit attempts)
         lock_id = "LOCK-RES-2026-003"
-        events.append(_build_event(now, lock_id, "cve_2025_4008_injection", "success | PHYSICAL_LOCK_STATE: UNSECURED"))
+        for _ in range(random.randint(1, 3)):
+            status = "success | PHYSICAL_LOCK_STATE: UNSECURED" if random.random() > 0.2 else "command_rejected"
+            events.append(_build_event(now, lock_id, "cve_2025_4008_injection", status))
 
     random.shuffle(events)
     return [asdict(e) for e in events]

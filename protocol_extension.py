@@ -23,12 +23,14 @@ EXTENSION_PROFILES: List[Dict[str, str]] = [
 ]
 
 def _to_iso8601_utc(ts: datetime) -> str:
+    """Format datetime to ISO8601 UTC string for forensic logging."""
     return ts.replace(tzinfo=timezone.utc).isoformat().replace("+00:00", "Z")
 
 def _random_public_ipv4() -> str:
     return ".".join(str(random.randint(1, 254)) for _ in range(4))
 
 def _extension_timestamp(base_time: datetime) -> str:
+    """Simulate recent alerts within a 15-minute window."""
     return _to_iso8601_utc(base_time - timedelta(seconds=random.randint(0, 900)))
 
 def _build_extension_event(base_time: datetime, profile: Dict[str, str], event_type: str) -> Dict[str, str]:
@@ -43,6 +45,7 @@ def _build_extension_event(base_time: datetime, profile: Dict[str, str], event_t
             "mitigation_recommendation": "Rotate Zigbee network keys and re-pair trusted devices.",
             "mac_address": profile["mac_address"],
         }
+    
     return {
         "timestamp": _extension_timestamp(base_time),
         "device_id": profile["device_id"],
@@ -55,18 +58,25 @@ def _build_extension_event(base_time: datetime, profile: Dict[str, str], event_t
     }
 
 def simulate_with_extensions(scenario: str = "BREACH") -> List[Dict[str, str]]:
-    """Run core simulation and append protocol-extension events."""
+    """Run core simulation and append a dynamic number of protocol-extension events."""
+    
+    # 1. Pull events from core engine.py
     events = simulate_threat_events(scenario=scenario)
     normalized_scenario = (scenario or "BREACH").upper()
     
+    # 2. Return base events for SAFE/PROBING
     if normalized_scenario not in {"ATTACK", "BREACH"}:
         return events
 
     now = datetime.now(timezone.utc)
     extension_events: List[Dict[str, str]] = []
 
-    extension_events.append(_build_extension_event(now, EXTENSION_PROFILES[0], "zigbee_replay_attack"))
-    extension_events.append(_build_extension_event(now, EXTENSION_PROFILES[1], "zwave_jamming_detected"))
+    # IMPROVED: Randomize the number of extension alerts (between 2 and 7)
+    # This prevents the "Static Number" UI bug
+    for _ in range(random.randint(2, 7)):
+        profile = random.choice(EXTENSION_PROFILES)
+        etype = random.choice(["zigbee_replay_attack", "zwave_jamming_detected"])
+        extension_events.append(_build_extension_event(now, profile, etype))
 
     combined = events + extension_events
     random.shuffle(combined)
