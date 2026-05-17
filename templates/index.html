@@ -10,6 +10,11 @@
         font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto,
           Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
       }
+        font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+      }
+      .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+      .custom-scrollbar::-webkit-scrollbar-track { background: #0f172a; }
+      .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
     </style>
   </head>
   <body class="bg-[#121212] text-slate-100 min-h-screen">
@@ -83,6 +88,77 @@
             {% endif %}
             <p class="mt-3 text-4xl font-bold {{ compliance_color }}">{{ compliance_score }}%</p>
             <p class="mt-2 text-sm text-slate-400">NIST IR 8425 audit alignment</p>
+      
+      <aside class="w-72 bg-slate-950 border-r border-slate-800 p-6 flex flex-col">
+        <div class="space-y-6">
+          <div>
+            <h1 class="text-2xl font-bold tracking-tight text-white">SentryNode v1.0</h1>
+            <p class="text-xs text-slate-500 mt-1 uppercase tracking-widest">SentryAI Dynamics</p>
+            {% if compliance_score == 100 %}
+            <div class="mt-3">
+              <span class="inline-block rounded-full border border-emerald-500/50 bg-emerald-900/30 px-3 py-1 text-[10px] font-bold text-emerald-400">
+                NIST IR 8425 CERTIFIED
+              </span>
+            </div>
+            {% endif %}
+          </div>
+
+          <nav class="space-y-4">
+            <div class="rounded-lg border border-slate-800 bg-slate-900/50 p-4">
+              <p class="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Simulation Control Center</p>
+              <div class="mt-3 space-y-2">
+                <a href="/?scenario=SAFE" class="block w-full px-3 py-2 rounded text-sm transition {% if scenario == 'SAFE' %}bg-emerald-600 text-white{% else %}bg-slate-800 text-slate-300 hover:bg-slate-700{% endif %}">🟢 Quiet Mode</a>
+                <a href="/?scenario=PROBING" class="block w-full px-3 py-2 rounded text-sm transition {% if scenario == 'PROBING' %}bg-yellow-600 text-white{% else %}bg-slate-800 text-slate-300 hover:bg-slate-700{% endif %}">🟡 Recon Detected</a>
+                <a href="/?scenario=ATTACK" class="block w-full px-3 py-2 rounded text-sm transition {% if scenario == 'ATTACK' %}bg-orange-600 text-white{% else %}bg-slate-800 text-slate-300 hover:bg-slate-700{% endif %}">🟠 Active Attack</a>
+                <a href="/?scenario=BREACH" class="block w-full px-3 py-2 rounded text-sm transition {% if scenario == 'BREACH' %}bg-rose-700 text-white shadow-lg shadow-rose-900/20{% else %}bg-slate-800 text-slate-300 hover:bg-slate-700{% endif %}">🔴 Simulate Breach</a>
+              </div>
+            </div>
+
+            <div class="rounded-lg border border-slate-800 bg-slate-900/50 p-4">
+              <p class="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Audit Status</p>
+              <p class="mt-2 text-sm font-semibold {% if audit_status == 'COMPLIANT' %}text-emerald-400{% else %}text-amber-400{% endif %}">
+                {{ audit_status }}
+              </p>
+            </div>
+          </nav>
+        </div>
+        
+        <div class="mt-auto pt-6 text-[10px] text-slate-600 border-t border-slate-800">
+          Logged in as: Kingston Postgrad Admin
+        </div>
+      </aside>
+
+      <main class="flex-1 p-8 lg:p-12 overflow-y-auto">
+        
+        <section class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+          <article class="rounded-xl border border-slate-800 bg-slate-900/90 p-6 shadow-sm">
+            <p class="text-[10px] uppercase tracking-wider text-slate-500 font-bold">System Threat Level</p>
+            {% set threat_color = 'text-emerald-400' %}
+            {% if threat_level == 'Critical' %} {% set threat_color = 'text-red-500' %}
+            {% elif threat_level == 'High' %} {% set threat_color = 'text-orange-400' %}
+            {% elif threat_level == 'Medium' %} {% set threat_color = 'text-yellow-400' %}
+            {% endif %}
+            <p class="mt-3 text-4xl font-black {{ threat_color }}">{{ threat_level }}</p>
+          </article>
+
+          <article class="rounded-xl border border-slate-800 bg-slate-900/90 p-6 shadow-sm">
+            <p class="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Physical Security</p>
+            <p class="mt-3 text-4xl font-black text-rose-400">{{ physical_security_risks }}</p>
+            <p class="mt-2 text-[10px] text-slate-500 font-medium">Smart lock compromises</p>
+          </article>
+
+          <article class="rounded-xl border border-slate-800 bg-slate-900/90 p-6 shadow-sm">
+            <p class="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Total Alerts</p>
+            <p class="mt-3 text-4xl font-black text-cyan-400">{{ total_alerts }}</p>
+            <p class="mt-2 text-[10px] text-slate-500 font-medium">Active simulation events</p>
+          </article>
+
+          <article class="rounded-xl border border-slate-800 bg-slate-900/90 p-6 shadow-sm">
+            <p class="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Compliance Score</p>
+            <p class="mt-3 text-4xl font-black {% if compliance_score == 100 %}text-emerald-400{% else %}text-amber-400{% endif %}">
+              {{ compliance_score }}%
+            </p>
+            <p class="mt-2 text-[10px] text-slate-500 font-medium">NIST IR 8425 Alignment</p>
           </article>
         </section>
 
@@ -101,6 +177,20 @@
         <section class="mt-6 rounded-xl border border-slate-800 bg-slate-900/70 p-5">
           <h3 class="text-lg font-semibold text-white">NIST IR 8425 Audit Findings</h3>
           <ul class="mt-3 space-y-2 text-sm text-slate-200 list-disc pl-5">
+        <section class="mt-8 rounded-xl border border-emerald-700/50 bg-emerald-900/10 p-6">
+          <h2 class="text-sm font-bold tracking-wide text-emerald-400 uppercase">System Status: Nominal</h2>
+          <p class="mt-2 text-emerald-100/80 text-sm">No immediate action required. Monitoring residential nodes...</p>
+        </section>
+        {% else %}
+        <section class="mt-8 rounded-xl border border-red-700/50 bg-red-950/40 p-6 animate-pulse">
+          <h2 class="text-sm font-bold tracking-wide text-red-400 uppercase">⚠️ Urgent Action Required</h2>
+          <p class="mt-2 text-red-100 text-lg font-medium">{{ first_aid_action }}</p>
+        </section>
+        {% endif %}
+
+        <section class="mt-8 rounded-xl border border-slate-800 bg-slate-900/40 p-6">
+          <h3 class="text-sm font-bold text-white uppercase tracking-wider">NIST Audit Logs</h3>
+          <ul class="mt-4 space-y-2 text-xs text-slate-400 list-disc pl-5">
             {% for finding in audit_findings %}
             <li>{{ finding }}</li>
             {% endfor %}
@@ -136,6 +226,37 @@
                 {% endfor %}
               </tbody>
             </table>
+            <h3 class="text-lg font-bold text-white">Live Incident Feed</h3>
+            <span class="text-[10px] uppercase font-bold text-slate-500">Scenario Context: {{ scenario }}</span>
+          </div>
+
+          <div class="rounded-xl border border-slate-800 bg-slate-900/60 overflow-hidden">
+            <div class="overflow-auto max-h-[400px] custom-scrollbar">
+              <table class="min-w-full text-left">
+                <thead class="sticky top-0 bg-slate-950 text-slate-400 text-[10px] uppercase font-bold border-b border-slate-800">
+                  <tr>
+                    <th class="px-6 py-4">Timestamp</th>
+                    <th class="px-6 py-4">Device</th>
+                    <th class="px-6 py-4">MAC Address</th>
+                    <th class="px-6 py-4">Event Type</th>
+                    <th class="px-6 py-4">Mitigation</th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-800 text-xs text-slate-300">
+                  {% for event in events %}
+                  <tr class="hover:bg-slate-800/40 transition">
+                    <td class="px-6 py-4 font-mono text-slate-500">{{ event.timestamp }}</td>
+                    <td class="px-6 py-4 font-bold text-slate-200">{{ event.device_id }}</td>
+                    <td class="px-6 py-4 font-mono">{{ event.mac_address }}</td>
+                    <td class="px-6 py-4">
+                      <span class="px-2 py-1 rounded bg-slate-800 text-slate-400">{{ event.event_type }}</span>
+                    </td>
+                    <td class="px-6 py-4 text-slate-400">{{ event.mitigation_recommendation }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
           </div>
         </section>
       </main>
